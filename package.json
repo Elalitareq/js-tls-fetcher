@@ -1,0 +1,67 @@
+{
+  "name": "js-tls-fetcher",
+  "version": "0.1.0",
+  "description": "HTTPS requests with a chosen TLS fingerprint (named browser profile or raw JA3) through an optional proxy. Real Chrome/Firefox/Safari JA3/JA4 + HTTP/2 fingerprints via a Go (uTLS/tls-client) helper process.",
+  "type": "module",
+  "main": "./node/index.js",
+  "types": "./node/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./node/index.d.ts",
+      "import": "./node/index.js",
+      "default": "./node/index.js"
+    }
+  },
+  "files": [
+    "node/index.js",
+    "node/index.d.ts",
+    "node/scripts/postinstall.js",
+    "cmd/",
+    "fetcher/",
+    "go.mod",
+    "go.sum",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node node/scripts/postinstall.js",
+    "build": "node node/scripts/postinstall.js",
+    "test": "node node/test.js"
+  },
+  "keywords": [
+    "tls",
+    "ja3",
+    "ja4",
+    "fingerprint",
+    "impersonate",
+    "http2",
+    "akamai",
+    "proxy",
+    "utls",
+    "tls-client",
+    "scraping",
+    "anti-bot"
+  ],
+  "author": "Tareq ElAli",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Elalitareq/js-tls-fetcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Elalitareq/js-tls-fetcher/issues"
+  },
+  "homepage": "https://github.com/Elalitareq/js-tls-fetcher#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+}

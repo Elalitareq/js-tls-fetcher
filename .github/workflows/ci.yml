@@ -7,8 +7,13 @@ on:
     branches: [main]
 
 jobs:
+  # Go correctness + the real Node end-to-end path (Node -> Go helper -> echo server).
   build-test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -27,9 +32,76 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Build helper for tests
-        run: go build -o node/bin/tlsfetch-server ./cmd/server
+      # `npm install` runs postinstall, which builds the helper from the Go
+      # source. This exercises the same code path a consumer hits.
+      - name: Install (exercises postinstall build path)
+        run: npm install
+
+      - name: Assert helper was built
+        shell: bash
+        run: test -x node/bin/tlsfetch-server
 
       - name: Node end-to-end test
-        working-directory: node
-        run: node test.js
+        run: npm test
+
+  # Every release target must compile before a tag is pushed, so `release.yml`
+  # can't fail halfway and leave a Release with missing platform assets.
+  cross-compile:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { goos: darwin, goarch: amd64 }
+          - { goos: darwin, goarch: arm64 }
+          - { goos: linux, goarch: amd64 }
+          - { goos: linux, goarch: arm64 }
+          - { goos: windows, goarch: amd64 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: go build -trimpath -ldflags "-s -w" -o /dev/null ./cmd/server
+
+  # The published tarball must carry the Go source, or postinstall on a machine
+  # without a prebuilt binary has nothing to build from.
+  pack-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Pack and verify contents
+        shell: bash
+        run: |
+          npm pack --ignore-scripts --quiet
+          tar -tzf js-tls-fetcher-*.tgz | sed 's|^package/||' | sort > packed.txt
+          echo "--- packed files ---"
+          cat packed.txt
+          for required in \
+            node/index.js \
+            node/index.d.ts \
+            node/scripts/postinstall.js \
+            go.mod \
+            go.sum \
+            cmd/server/main.go \
+            fetcher/fetcher.go
+          do
+            if ! grep -qx "$required" packed.txt; then
+              echo "::error::missing from published tarball: $required"
+              exit 1
+            fi
+          done
+          echo "tarball contents OK"

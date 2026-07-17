@@ -17,8 +17,9 @@ import { execFileSync } from "node:child_process";
 import https from "node:https";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const pkgDir = resolve(__dirname, ".."); // the node/ package dir
-const binDir = join(pkgDir, "bin");
+const nodeDir = resolve(__dirname, ".."); // the node/ dir, next to index.js
+const rootDir = resolve(nodeDir, ".."); // package root: package.json + Go source
+const binDir = join(nodeDir, "bin");
 const isWin = process.platform === "win32";
 const exeName = isWin ? "tlsfetch-server.exe" : "tlsfetch-server";
 const dest = join(binDir, exeName);
@@ -27,7 +28,7 @@ const GOOS = { darwin: "darwin", linux: "linux", win32: "windows" }[process.plat
 const GOARCH = { x64: "amd64", arm64: "arm64" }[process.arch];
 
 function log(msg) {
-  console.log(`[tls-fetcher] ${msg}`);
+  console.log(`[js-tls-fetcher] ${msg}`);
 }
 
 function findModuleRoot(start) {
@@ -42,7 +43,7 @@ function findModuleRoot(start) {
 }
 
 function tryBuild() {
-  const root = findModuleRoot(pkgDir);
+  const root = findModuleRoot(nodeDir);
   if (!root) return false;
   try {
     execFileSync("go", ["version"], { stdio: "ignore" });
@@ -60,7 +61,7 @@ function tryBuild() {
 
 function repoSlug() {
   try {
-    const pkg = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
+    const pkg = JSON.parse(readFileSync(join(rootDir, "package.json"), "utf8"));
     const url = (pkg.repository && (pkg.repository.url || pkg.repository)) || "";
     const m = String(url).match(/github\.com[/:]([^/]+\/[^/.]+)/);
     if (m) return m[1];

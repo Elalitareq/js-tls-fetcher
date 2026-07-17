@@ -1,7 +1,9 @@
 name: Release
 
-# Push a tag like v0.1.0 to build helper binaries for all platforms and attach
-# them to a GitHub Release. The npm postinstall downloads these when Go is absent.
+# Push a tag like v0.1.0 to build helper binaries for all platforms, attach them
+# to a GitHub Release, then publish to npm. The npm postinstall downloads these
+# release assets when Go is absent on the installing machine — so the binaries
+# MUST be uploaded before the npm publish, hence `publish-npm: needs: build`.
 on:
   push:
     tags: ["v*"]
@@ -10,7 +12,26 @@ permissions:
   contents: write
 
 jobs:
+  # The tag is the source of truth for the version. Catch a mismatch before any
+  # asset or package is published, since neither is easy to retract.
+  verify-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag must match package.json version
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          echo "tag=$tag package.json=$pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag v$tag does not match package.json version $pkg"
+            exit 1
+          fi
+
   build:
+    needs: verify-version
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -50,3 +71,37 @@ jobs:
         with:
           files: ${{ env.ASSET }}
           fail_on_unmatched_files: true
+
+  # Runs only after every platform binary is attached to the Release, so a fresh
+  # `npm install` can always find its asset. Skipped (not failed) when no
+  # NPM_TOKEN secret is set — the GitHub install path does not need it.
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check for NPM_TOKEN
+        id: token
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::NPM_TOKEN not set — skipping npm publish. Install via github:Elalitareq/js-tls-fetcher instead."
+          fi
+
+      - name: Publish
+        if: steps.token.outputs.present == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # --ignore-scripts: do not run postinstall on the publishing runner; it
+        # would build a linux binary that must not be baked into the tarball.
+        run: npm publish --access public --ignore-scripts

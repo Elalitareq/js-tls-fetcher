@@ -1,11 +1,11 @@
-// tls-fetcher — Node client over a Go (uTLS/tls-client) helper process.
+// js-tls-fetcher — Node client over a Go (uTLS/tls-client) helper process.
 //
 // Make HTTPS requests with a chosen TLS fingerprint (a named browser profile
 // OR a raw JA3 string) through an optional proxy. The Go child process does the
 // real TLS/HTTP2 work; Node talks to it over newline-delimited JSON on stdio.
 //
 // Usage:
-//   import { TlsClient } from "tls-fetcher";
+//   import { TlsClient } from "js-tls-fetcher";
 //   const client = new TlsClient();               // spawns the Go helper
 //   const res = await client.request({
 //     url: "https://tls.peet.ws/api/all",

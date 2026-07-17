@@ -12,5 +12,6 @@ dist/
 
 # Archives / scratch
 *.tar.gz
+*.tgz
 results.jsonl
 proxies.txt

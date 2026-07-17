@@ -1,4 +1,6 @@
-# tls-fetcher
+# js-tls-fetcher
+
+[![CI](https://github.com/Elalitareq/js-tls-fetcher/actions/workflows/ci.yml/badge.svg)](https://github.com/Elalitareq/js-tls-fetcher/actions/workflows/ci.yml)
 
 A request handler that performs HTTPS requests with a **chosen TLS fingerprint**
 — a named browser profile *or* a raw JA3 string — through an **optional proxy**
@@ -12,6 +14,22 @@ Ships three ways to use it:
 2. **Go CLI** — `cmd/fetch`, rotates fingerprints + proxies over a target.
 3. **Node package** — `node/`, a JS API that runs requests **through a Go helper
    process** (the working, real-fingerprint way to use this from Node).
+
+## Purpose
+
+Servers increasingly identify clients by *how they speak TLS and HTTP/2* — the
+byte shape of the TLS ClientHello (JA3/JA4) and the HTTP/2 preamble — not just by
+the `User-Agent` header. tls-fetcher makes a request that is consistent all the
+way down: TLS fingerprint, HTTP/2 fingerprint, and headers all match a chosen
+real browser (or a raw JA3 you supply), optionally through a proxy. Use it as the
+request engine for fingerprint-aware endpoints, or to test the fingerprint
+defenses of a service you run.
+
+## Documentation
+
+- [`CLAUDE.md`](CLAUDE.md) — orientation + commands + gotchas (also for Claude Code).
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — design, data flow, the three
+  fingerprints, why-not-WASM, and how the fingerprints were verified.
 
 ## Why a Go subprocess for Node (and not WASM)
 
@@ -27,18 +45,34 @@ that over newline-delimited JSON on stdio: one long-lived Go process, many
 concurrent requests correlated by id. Pure Go, no CGO — cross-compiles to
 darwin/arm64, linux, windows.
 
-## Node quick start
+## Install
 
 ```bash
-# 1. Build the Go helper for YOUR platform (needs Go installed):
-cd node && npm run build          # -> node/bin/tlsfetch-server
+# From GitHub (works today, no registry needed):
+npm install github:Elalitareq/js-tls-fetcher
 
-# 2. Use it:
-node
+# Pin to a release tag (recommended for servers):
+npm install github:Elalitareq/js-tls-fetcher#v0.1.0
+
+# From npm, once a v-tag has been published:
+npm install js-tls-fetcher
 ```
 
+On install, a postinstall step obtains the native Go helper for your platform:
+
+1. builds it with `go build` if a Go toolchain is present, else
+2. downloads the prebuilt binary for your OS/arch from this repo's
+   [Releases](https://github.com/Elalitareq/js-tls-fetcher/releases).
+
+It never hard-fails the install. If both routes fail (no Go **and** no matching
+release asset), run `npm run build` manually or drop a binary into
+`node_modules/js-tls-fetcher/node/bin/`. Supported: darwin/linux/windows on
+x64 or arm64.
+
+## Node quick start
+
 ```js
-import { TlsClient } from "tls-fetcher";
+import { TlsClient } from "js-tls-fetcher";
 
 const client = new TlsClient();                 // spawns the Go helper
 
