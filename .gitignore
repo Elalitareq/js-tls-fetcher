@@ -1,0 +1,16 @@
+# Go
+/tmp/
+*.test
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Built helper binaries (produced by postinstall / CI)
+node/bin/
+dist/
+
+# Archives / scratch
+*.tar.gz
+results.jsonl
+proxies.txt

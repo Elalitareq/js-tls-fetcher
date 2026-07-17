@@ -1,0 +1,44 @@
+{
+  "name": "tls-fetcher",
+  "version": "0.1.0",
+  "description": "Node client for HTTPS requests with a chosen TLS fingerprint (named browser profile or raw JA3) through a proxy. Requests run through a Go (uTLS/tls-client) helper process.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "scripts/postinstall.js"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js",
+    "build": "node scripts/postinstall.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "tls",
+    "ja3",
+    "ja4",
+    "fingerprint",
+    "impersonate",
+    "http2",
+    "proxy",
+    "utls",
+    "tls-client",
+    "scraping"
+  ],
+  "author": "Tareq ElAli",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Elalitareq/tls-fetcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Elalitareq/tls-fetcher/issues"
+  },
+  "homepage": "https://github.com/Elalitareq/tls-fetcher#readme",
+  "engines": {
+    "node": ">=18"
+  }
+}
