@@ -160,3 +160,11 @@ Do **not** add `refraction-networking/utls` to this module. Two uTLS forks in on
 module can bump shared deps and make tls-client's fork silently fall back to a
 plain TLS 1.2 handshake. The JA3-generator tools live in their own module for
 exactly this reason.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Built on
+[bogdanfinn/tls-client](https://github.com/bogdanfinn/tls-client) and its
+`fhttp`/`utls` forks; their licenses are in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). This product includes software
+developed by Bogdan Finn.

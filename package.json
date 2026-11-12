@@ -19,6 +19,7 @@
     "cmd/",
     "fetcher/",
     "go.mod",
+    "THIRD_PARTY_NOTICES.md",
     "go.sum",
     "LICENSE",
     "README.md"
